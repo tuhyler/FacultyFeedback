@@ -1,0 +1,84 @@
+﻿@if (Questions.Count == 0)
+{
+	<text>Questionnaire needs to be created</text>
+}
+else
+{
+	<div>
+		<InputSelect @bind-Value="@studentSelected">
+		<option value="Nope" selected disabled>Select Student...</option>
+		@for (var i = 0; i < studentNames.Count; i++)
+		{
+			<option value="studentNames[i]">@studentNames[i]</option>
+		}
+		</InputSelect>
+		<ValidationMessage For="@(() => studentSelected)" />
+	</div>
+
+	<br>
+	<br />
+
+	<ol>
+		@foreach (var question in Questions)
+		{
+			<li>
+				<div class="question">
+					@question.QuestionText
+
+					@if (question.QuestionType == "5-point scale")
+					{
+						<br />
+						<div id="radioGroup">
+							<InputRadioGroup Name="@question.Id.ToString()" @bind-Value="question.Rating">
+								<div class="wrap">
+									<label for="oneId">Absolute trash</label>
+									<InputRadio Name="@question.Id.ToString()" Value="1" />
+								</div>
+								<div class="wrap">
+									<label for="twoId">Pretty bad</label>
+									<InputRadio Name="@question.Id.ToString()" Value="2" />
+								</div>
+								<div class="wrap">
+									<label for="threeId">Middle o' the road</label>
+									<InputRadio Name="@question.Id.ToString()" Value="3" />
+								</div>
+								<div class="wrap">
+									<label for="fourId">Pretty good</label>
+									<InputRadio Name="@question.Id.ToString()" Value="4" />
+								</div>
+								<div class="wrap">
+									<label for="fiveId">Best I've ever seen</label>
+									<InputRadio Name="@question.Id.ToString()" Value="5" />
+								</div>
+							</InputRadioGroup>
+						</div>
+					}
+					else if (question.QuestionType == "binary")
+					{
+						<div class="question_binary">
+							<InputCheckbox @bind-Value="question.IsTrue" />
+						</div>
+					}
+					else if (question.QuestionType == "open-ended")
+					{
+						<br />
+						<div class="question_binary">
+							<InputTextArea @bind-Value="question.WrittenAnswer" placeholder="Insert text here" rows="5" cols="80" maxlength="500" />
+						</div>
+					}
+				</div>
+			</li>
+		}
+	</ol>
+
+	<br />
+
+	<button type="submit">Submit Feedback</button>
+}
+
+@code {
+	[Parameter] public List<Question> Questions { get; set; } = new();
+
+	private List<string> studentNames = new() { "Lane Meyer", "Charles De Mar", "Ricky Smith", "Beth Truss", "Roy Stalin" };
+	private string studentSelected;
+}

@@ -1,0 +1,174 @@
+﻿@page "/create_form"
+@inject QuestionState QuestionState
+
+<PageTitle>Form Creation</PageTitle>
+
+<h2>Questionnaire Creation</h2>
+
+<ol>
+	@foreach (var question in QuestionState.Questions)
+	{
+		<li> 
+			<div class="question">
+				@question.QuestionText 
+
+				@if (question.QuestionType == "5-point scale")
+				{
+					<br />
+					<div id="radioGroup">
+						<div class="wrap">
+							<label for="oneId">Absolute trash</label>
+							<input type="radio" id="oneId" name="rating" value="one">
+						</div>
+						<div class="wrap">
+							<label for="twoId">Pretty bad</label>
+							<input type="radio" id="twoId" name="rating" value="two">
+						</div>
+						<div class="wrap">
+							<label for="threeId">Middle o' the road</label>
+							<input type="radio" id="threeId" name="rating" value="three">
+						</div>
+						<div class="wrap">
+							<label for="fourId">Pretty good</label>
+							<input type="radio" id="fourId" name="rating" value="four">
+						</div>
+						<div class="wrap">
+							<label for="fiveId">Best I've ever seen</label>
+							<input type="radio" id="fiveId" name="rating" value="five">
+						</div>
+					</div>
+				}
+				else if (question.QuestionType == "binary")
+				{
+					<div class="question_binary">
+						<input type="checkbox" />
+					</div>
+				}
+				else if (question.QuestionType == "open-ended")
+				{
+					<br />
+					<div class="question_binary">
+						<textarea placeholder="Insert text here" rows="5" cols="80" maxlength="500" />
+					</div>
+				}
+				<br>
+				<button type="button" @onclick="@(() => MoveQuestion(question, true))">Move Up</button>
+				<button type="button" @onclick="@(() => MoveQuestion(question, false))">Move Down</button>
+				<button type="button" @onclick="@(() => RemoveQuestion(question))">Delete</button>
+			</div>
+		</li>
+	}
+</ol>
+
+<h3>Create question:</h3>
+<select class="custom-select" @onchange="QuestionSelected">
+	<option value="-1" disabled selected>Select Question...</option>
+	@for (var i = 0; i < sampleQuestions.Count; i++)
+	{
+		<option value="@i">@sampleQuestions[i]</option>
+	}
+</select>
+<div style="color:red">
+	@if (needsText)
+	{
+		<text>Question text is required</text>
+	}
+</div>
+<br>
+
+@if (showCustomText)
+{
+	newQuestion = string.Empty;
+	<textarea rows="3" cols="200" style="width:500px;" @bind="newQuestion" maxlength="500" placeholder="Write question text here" /> <br>
+}
+
+<select class="custom-select" @onchange="QuestionTypeSelected">
+	<option value="-1" disabled selected>Question Type</option>
+	@for (var i = 0; i < questionTypes.Count; i++)
+	{
+		<option value="@i">@questionTypes[i]</option>
+	}
+</select> 
+<div style="color:red">
+	@if (needsType)
+	{
+		<text>Question type is required</text>
+	}
+</div>
+<br />
+<button @onclick="CreateQuestion">Create Question</button>
+
+@code {
+	private bool showCustomText = false;
+	private string newQuestion = string.Empty;
+	private string questionType = string.Empty;
+	private List<string> questionTypes = new() { "5-point scale", "binary", "open-ended" };
+	private List<string> sampleQuestions = new() { "Custom...","How effective is student in a team?", "How effective is student with the patient?" };
+	private int questionCount;
+	private bool needsText;
+	private bool needsType;
+
+	private void CreateQuestion()
+	{
+		bool cancelCreation = false;
+
+		if (string.IsNullOrEmpty(newQuestion))
+		{
+			needsText = true;
+			cancelCreation = true;
+		}
+		if (string.IsNullOrEmpty(questionType))
+		{
+			needsType = true;
+			cancelCreation = true;
+		}
+		if (QuestionState.Questions.Count > 100 || cancelCreation) return;
+
+		QuestionState.Questions.Add(new Question { QuestionText = newQuestion, QuestionType = questionType, Id =  questionCount});
+		newQuestion = string.Empty;
+		questionCount++;
+	}
+
+	private void QuestionSelected(ChangeEventArgs e)
+	{
+		needsText = false;
+
+		if (int.TryParse((string?)e.Value, out var index) && index >= 0)
+		{
+			if (index == 0)
+			{
+				showCustomText = true;
+			}
+			else
+			{
+				newQuestion = sampleQuestions[index];
+				showCustomText = false;
+			}
+
+		}
+	}
+
+	private void QuestionTypeSelected(ChangeEventArgs e)
+	{
+		needsType = false;
+
+		if (int.TryParse((string?)e.Value, out var index) && index >= 0)
+		{		
+			questionType = questionTypes[index];
+		}
+	}
+
+	private void MoveQuestion(Question question, bool up)
+	{
+		int index = QuestionState.Questions.IndexOf(question);
+		int newIndex = up ? index - 1 : index + 1;
+
+		QuestionState.Questions.Remove(question);
+		QuestionState.Questions.Insert(newIndex, question);
+	}
+
+	private void RemoveQuestion(Question question)
+	{
+		QuestionState.Questions.Remove(question);
+	}
+}

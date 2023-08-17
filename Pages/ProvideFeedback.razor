@@ -1,0 +1,101 @@
+﻿@page "/provide_feedback"
+@inject QuestionState QuestionState
+@inject NavigationManager NavigationManager
+
+<PageTitle>Provide Feedback</PageTitle>
+
+
+<div class="main">
+	<EditForm Model="student" OnValidSubmit="@SubmitFeedback">
+		@if (QuestionState.Questions.Count == 0)
+		{
+			<text>Questionnaire needs to be created</text>
+		}
+		else
+		{
+			<InputSelect @bind-Value="@student.studentName">
+				<option value="No Student" selected disabled>Select Student...</option>
+				@for (var i = 0; i < studentNames.Count; i++)
+				{
+					<option value="@studentNames[i]">@studentNames[i]</option>
+				}
+			</InputSelect>
+			<ValidationMessage For="@(() => student.studentName)" />
+
+			<br>
+			<br />
+		
+			<ol>
+				@foreach (var question in QuestionState.Questions)
+				{
+					<li>
+						<div class="question">
+							@question.QuestionText
+
+							@if (question.QuestionType == "5-point scale")
+							{
+								<br />
+								<div id="radioGroup" >
+									<InputRadioGroup Name="@question.Id.ToString()" @bind-Value="question.Rating">
+										<div class="wrap">
+											<label for="oneId">Absolute trash</label>
+											<InputRadio id="radio1" Value="1" />
+										</div>
+										<div class="wrap">
+											<label for="twoId">Pretty bad</label>
+											<InputRadio id="radio2" Value="2" />
+										</div>
+										<div class="wrap">
+											<label for="threeId">Middle o' the road</label>
+											<InputRadio id="radio3" Value="3" />
+										</div>
+										<div class="wrap">
+											<label for="fourId">Pretty good</label>
+											<InputRadio id="radio4" Value="4" />
+										</div>
+										<div class="wrap">
+											<label for="fiveId">Best I've ever seen</label>
+											<InputRadio id="radio5" Value="5" />
+										</div>
+									</InputRadioGroup>
+								</div>
+							}
+							else if (question.QuestionType == "binary")
+							{
+								<div class="question_binary">
+									<InputCheckbox @bind-Value="question.IsTrue" />
+								</div>
+							}
+							else if (question.QuestionType == "open-ended")
+							{
+								<br />
+								<div class="question_binary">
+									<InputTextArea @bind-Value="question.WrittenAnswer" placeholder="Insert text here" rows="5" cols="80" maxlength="500" />
+								</div>
+							}
+						</div>
+					</li>
+				}
+			</ol>
+
+			<br />
+
+			<button type="submit">Submit Feedback</button>
+		}
+
+		<DataAnnotationsValidator />
+	</EditForm>
+</div>
+
+
+@code {
+	private List<string> studentNames = new() { "Lane Meyer", "Charles De Mar", "Ricky Smith", "Beth Truss", "Roy Stalin" } ;
+	private string? studentSelected;
+	private StudentFeedback student = new();
+
+	private void SubmitFeedback()
+	{
+		student.questions = QuestionState.Questions;
+		NavigationManager.NavigateTo("/confirmation");
+	}
+}
